@@ -67,13 +67,18 @@ module PagSeguro
       end
 
       def serialize_creditor(data)
-        data[:creditor_fees] = {
-          intermediation_rate_amount: BigDecimal(xml.css("creditorFees > intermediationRateAmount").text.to_f.to_s),
-          intermediation_fee_amount: BigDecimal(xml.css("creditorFees > intermediationFeeAmount").text.to_f.to_s),
-          installment_fee_amount: BigDecimal(xml.css("creditorFees > installmentFeeAmount").text.to_f.to_s),
-          operational_fee_amount: BigDecimal(xml.css("creditorFees > operationalFeeAmount").text.to_f.to_s),
-          commission_fee_amount: BigDecimal(xml.css("creditorFees > commissionFeeAmount").text.to_f.to_s),
-          efrete: BigDecimal(xml.css("creditorFees > efrete").text.to_f.to_s)
+        creditor_keys = []
+        xml.css("creditorFees").children.each{|child_node| creditor_keys << child_node.name }
+
+        data[:creditor_fees] = {}
+        creditor_keys.each do |key|
+          data[:creditor_fees].merge!(get_creditor_keys(key))
+        end
+      end
+
+      def get_creditor_keys(key)
+        {
+          "#{key.underscore}": BigDecimal(xml.css("creditorFees > #{key}").text.to_f.to_s)
         }
       end
 
